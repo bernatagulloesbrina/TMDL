@@ -1,0 +1,191 @@
+createOrReplace
+ 
+	expression fxGetCalendarTable = ```
+			(startDate as date, optional endDate as date) =>
+			let
+			    Today = Date.From( DateTime.LocalNow() ),
+			    StartDate = startDate,
+			    EndDate = Date.AddYears(Date.EndOfYear( endDate ?? Today ),1),
+			    #"List of Dates" = List.Dates( StartDate, Duration.Days( EndDate - StartDate ) +1, #duration( 1, 0, 0, 0 ) ),
+			    #"Converted to Table" = Table.FromList( #"List of Dates", Splitter.SplitByNothing(), type table[Date = Date.Type] ),
+			    #"Inserted Year" = Table.AddColumn(#"Converted to Table", "Year", each Date.Year([Date]), Int64.Type),
+			    #"Inserted Quarter" = Table.AddColumn(#"Inserted Year", "Quarter", each Date.QuarterOfYear([Date]), Int64.Type),
+			    #"Added Custom3" = Table.AddColumn(#"Inserted Quarter", "Quarter Name", each "Q" & Text.From([Quarter])),
+			    #"Added Custom4" = Table.AddColumn(#"Added Custom3", "Quarter Year", each [Quarter Name] & " " & Text.From([Year])),
+			    #"Added Custom5" = Table.AddColumn(#"Added Custom4", "Quarter Year Number", each [Year] * 100 + [Quarter]),
+			    #"Inserted Month" = Table.AddColumn(#"Added Custom5", "Month", each Date.Month([Date]), Int64.Type),
+			    #"Inserted Month Name" = Table.AddColumn(#"Inserted Month", "Month Name", each Date.MonthName([Date],"en-us"), type text),
+			    #"Added Custom" = Table.AddColumn(#"Inserted Month Name", "Month Year", each [Month Name] & " " & Text.From([Year])),
+			    #"Inserted First Characters" = Table.AddColumn(#"Added Custom", "Month Name Short", each Text.Start([Month Name], 3), type text),
+			    #"Added Custom1" = Table.AddColumn(#"Inserted First Characters", "Month Year Short", each [Month Name Short] & " " & Text.From([Year])),
+			    #"Added Custom2" = Table.AddColumn(#"Added Custom1", "Year Month Number", each [Year] * 100 + [Month]),
+			    #"Changed Type" = Table.TransformColumnTypes(#"Added Custom2",{{"Year Month Number", Int64.Type}, {"Quarter Year Number", Int64.Type}, {"Month Year", type text}, {"Month Name Short", type text}, {"Month Year Short", type text}})
+			in 
+			    #"Changed Type"
+			```
+		queryGroup: Functions
+
+		annotation PBI_NavigationStepName = Navigation
+
+		annotation PBI_ResultType = Function
+	
+	table Date
+ 
+ 
+		column Date
+			dataType: dateTime
+			isKey
+			formatString: dd-mm-yyyy
+			isAvailableInMdx: false
+ 
+			summarizeBy: none
+			sourceColumn: Date
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+			annotation UnderlyingDateTimeDataType = Date
+ 
+			annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["DATECOLUMN_FORMATSTRING"]}
+ 
+		column Year
+			dataType: int64
+			formatString: 0
+ 
+			summarizeBy: none
+			sourceColumn: Year
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		column Quarter
+			dataType: int64
+			formatString: 0
+ 
+			summarizeBy: none
+			sourceColumn: Quarter
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		column 'Quarter Name'
+			dataType: string
+ 
+			summarizeBy: none
+			sourceColumn: Quarter Name
+			sortByColumn: Quarter
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		column 'Quarter Year'
+			dataType: string
+ 
+			summarizeBy: none
+			sourceColumn: Quarter Year
+			sortByColumn: 'Quarter Year Number'
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		column Month
+			dataType: int64
+			formatString: 0
+ 
+			summarizeBy: none
+			sourceColumn: Month
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		column 'Month Name'
+			dataType: string
+ 
+			summarizeBy: none
+			sourceColumn: Month Name
+			sortByColumn: Month
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		column 'Month Year'
+			dataType: string
+ 
+			summarizeBy: none
+			sourceColumn: Month Year
+			sortByColumn: 'Year Month Number'
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		column 'Month Name Short'
+			dataType: string
+ 
+			summarizeBy: none
+			sourceColumn: Month Name Short
+			sortByColumn: 'Year Month Number'
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		column 'Month Year Short'
+			dataType: string
+ 
+			summarizeBy: none
+			sourceColumn: Month Year Short
+			sortByColumn: Month
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		column 'Year Month Number'
+			dataType: int64
+			formatString: 0
+ 
+			summarizeBy: none
+			sourceColumn: Year Month Number
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		column 'Quarter Year Number'
+			dataType: int64
+			formatString: 0
+ 
+			summarizeBy: none
+			sourceColumn: Quarter Year Number
+ 
+			annotation SummarizationSetBy = Automatic
+ 
+		partition Date = m
+			mode: import
+			queryGroup: 'Model Tables'
+			source =
+					let
+					    Source = fxGetCalendarTable(#date(2018, 1, 1), null)
+					in
+					    Source
+ 
+		calendar Gregorian
+ 
+ 
+			calendarColumnGroup = year
+				primaryColumn: Year
+ 
+			calendarColumnGroup = quarter
+				primaryColumn: 'Quarter Year Number'
+				associatedColumn: 'Quarter Year'
+ 
+			calendarColumnGroup = quarterOfYear
+				primaryColumn: Quarter
+				associatedColumn: 'Quarter Name'
+ 
+			calendarColumnGroup = month
+				primaryColumn: 'Year Month Number'
+				associatedColumn: 'Month Year'
+				associatedColumn: 'Month Year Short'
+ 
+			calendarColumnGroup = monthOfYear
+				primaryColumn: Month
+				associatedColumn: 'Month Name'
+				associatedColumn: 'Month Name Short'
+ 
+			calendarColumnGroup = date
+				primaryColumn: Date
+ 
+		annotation PBI_NavigationStepName = Navigation
+ 
+		annotation PBI_ResultType = Table
+ 
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["DATE/CALENDAR_TABLES_SHOULD_BE_MARKED_AS_A_DATE_TABLE"]}
+ 
+ 
