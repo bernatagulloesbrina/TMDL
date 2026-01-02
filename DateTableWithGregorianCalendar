@@ -182,10 +182,17 @@ createOrReplace
 			calendarColumnGroup = date
 				primaryColumn: Date
  
+ 
 		annotation PBI_NavigationStepName = Navigation
  
 		annotation PBI_ResultType = Table
  
 		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["DATE/CALENDAR_TABLES_SHOULD_BE_MARKED_AS_A_DATE_TABLE"]}
- 
- 
+
+	queryGroup 'Model Tables'
+
+		annotation PBI_QueryGroupOrder = 0
+
+	queryGroup Functions
+
+		annotation PBI_QueryGroupOrder = 1
