@@ -1,0 +1,19 @@
+createOrReplace
+
+	function ExcelPathToExcelOnline = ```
+			(ExcelPathColumn: COLUMNREF EXPR) => 
+			VAR OriginalURL = MAX(ExcelPathColumn)
+			VAR Result =
+			SWITCH(
+			    TRUE(),
+			    NOT CONTAINSSTRING(OriginalURL,".sharepoint.com" ), BLANK(),
+			    NOT CONTAINSSTRING(OriginalURL,"/sites/" ), BLANK(),
+			    NOT ISFILTERED(TABLEOF(ExcelPathColumn)), BLANK(),
+			    VAR BaseURL = LEFT(OriginalURL, FIND(".sharepoint.com", OriginalURL) + LEN(".sharepoint.com") - 1)
+			    VAR FilePath = MID(OriginalURL, FIND("/sites/", OriginalURL), LEN(OriginalURL))
+			    RETURN
+			        BaseURL & "/:x:/r" & FilePath & "?web=1"
+			   
+			)
+			RETURN Result
+			```
