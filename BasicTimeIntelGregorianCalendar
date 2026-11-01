@@ -1,0 +1,44 @@
+createOrReplace
+
+	function 'Local.TimeIntel.CY' =
+			
+			(
+			    baseMeasure: ANYREF EXPR
+			) =>
+			
+			baseMeasure
+		
+
+	function 'Local.TimeIntel.PY' =
+			
+			(
+			    baseMeasure: ANYREF EXPR
+			) =>
+			
+			CALCULATE( baseMeasure, DATEADD( 'Gregorian', - 12, MONTH ) )
+		
+
+	function 'Local.TimeIntel.YOY' =
+			
+			(
+			    baseMeasure: ANYREF EXPR
+			)=>
+			
+			VAR _currentValue = Local.TimeIntel.CY(baseMeasure)
+			VAR _previousValue = Local.TimeIntel.PY(baseMeasure)
+			VAR _result = IF(ISBLANK(_currentValue) ||ISBLANK(_previousValue), BLANK(), _currentValue-_previousValue)
+			RETURN _result
+		
+
+	function 'Local.TimeIntel.YOYPCT' =
+			
+			(
+			    baseMeasure: ANYREF EXPR
+			)=>
+			
+			VAR _currentValue = Local.TimeIntel.CY(baseMeasure)
+			VAR _previousValue = Local.TimeIntel.PY(baseMeasure)
+			VAR _result = IF( ISBLANK( _currentValue ) || ISBLANK( _previousValue ), BLANK(), DIVIDE( _currentValue - _previousValue, _previousValue ) )
+			RETURN _result
+		
+
